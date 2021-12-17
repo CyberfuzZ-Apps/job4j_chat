@@ -28,6 +28,16 @@ public class Message {
     @JoinColumn(name = "room_id")
     private Room room;
 
+    public static Message of(int id, String message, Timestamp created, Person person, Room room) {
+        Message message1 = new Message();
+        message1.id = id;
+        message1.message = message;
+        message1.created = created;
+        message1.person = person;
+        message1.room = room;
+        return message1;
+    }
+
     public int getId() {
         return id;
     }

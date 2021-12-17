@@ -5,12 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.chat.PatchUtil;
 import ru.job4j.chat.exception.IllegalAuthorityException;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.service.RoleService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 /**
@@ -88,6 +90,24 @@ public class RoleController {
         return new ResponseEntity<>(
                 role1,
                 role.getId() == role1.getId() ? HttpStatus.OK : HttpStatus.CREATED
+        );
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Role> patchRole(@PathVariable int id,
+                                          @RequestBody Role role)
+            throws InvocationTargetException, IllegalAccessException {
+        Role foundedRole = roleService.findById(id);
+        if (foundedRole == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Роль не найдена!!!");
+        }
+        Role patchedRole = PatchUtil.patch(role, foundedRole);
+        patchedRole.setId(id);
+        Role responseRole = roleService.save(patchedRole);
+        return new ResponseEntity<>(
+                responseRole,
+                HttpStatus.OK
         );
     }
 

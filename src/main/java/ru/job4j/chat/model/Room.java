@@ -22,6 +22,14 @@ public class Room {
     @JoinColumn(name = "person_id")
     private Person person;
 
+    public static Room of(int id, String name, Person person) {
+        Room room = new Room();
+        room.id = id;
+        room.name = name;
+        room.person = person;
+        return room;
+    }
+
     public int getId() {
         return id;
     }
