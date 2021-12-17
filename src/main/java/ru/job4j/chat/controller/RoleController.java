@@ -33,6 +33,7 @@ public class RoleController {
 
     @GetMapping({"/", ""})
     public ResponseEntity<Iterable<Role>> findAll() {
+
         return new ResponseEntity<>(
                 roleService.findAll(),
                 HttpStatus.OK
@@ -57,6 +58,7 @@ public class RoleController {
     @GetMapping("/authority/{authority}")
     public ResponseEntity<Role> findByAuthority(@PathVariable String authority) {
         Role role = roleService.findByAuthority(authority);
+
         return new ResponseEntity<>(
                 role,
                 role != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
@@ -92,6 +94,7 @@ public class RoleController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable int id) {
         roleService.deleteById(id);
+
         return ResponseEntity.ok().build();
     }
 
