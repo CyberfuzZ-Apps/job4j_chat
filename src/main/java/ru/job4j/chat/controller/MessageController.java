@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Message;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
@@ -46,9 +47,15 @@ public class MessageController {
     @GetMapping("/{messageId}")
     public ResponseEntity<Message> findMessageById(@PathVariable int messageId) {
         Message message = messageService.findById(messageId);
+        if (message == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Сообщение не найдено!!!"
+            );
+        }
         return new ResponseEntity<>(
                 message,
-                message != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                HttpStatus.OK
         );
     }
 
@@ -76,6 +83,9 @@ public class MessageController {
     }
 
     private void buildMessage(@RequestBody Message message, @PathVariable int roomId) {
+        if (message.getMessage() == null) {
+            throw new NullPointerException("Сообщение не должно быть пустым!!!");
+        }
         message.setCreated(Timestamp.valueOf(LocalDateTime.now()));
         Room room = roomService.findById(roomId);
         Person person = personService.findById(message.getPerson().getId());

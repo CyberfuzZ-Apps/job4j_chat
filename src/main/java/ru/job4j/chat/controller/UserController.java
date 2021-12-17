@@ -6,8 +6,6 @@ import ru.job4j.chat.model.Person;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoleService;
 
-import java.util.List;
-
 /**
  * Класс UserController
  *
@@ -37,6 +35,12 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public void signUp(@RequestBody Person person) {
+        if (person.getNickname() == null
+                || person.getUsername() == null
+                || person.getPassword() == null) {
+            throw new NullPointerException("Ник, имя пользователя и пароль "
+                    + "не должны быть пустыми!!!");
+        }
         person.setPassword(encoder.encode(person.getPassword()));
         person.setAuthority(roleService.findByAuthority("ROLE_USER"));
         personService.save(person);

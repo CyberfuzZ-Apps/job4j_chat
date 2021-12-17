@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.service.PersonService;
 
@@ -33,9 +34,15 @@ public class PersonController {
     @GetMapping("/{id}")
     public ResponseEntity<Person> findById(@PathVariable int id) {
         Person person = personService.findById(id);
+        if (person == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Пользователь не найден!!!"
+            );
+        }
         return new ResponseEntity<>(
                 person,
-                person != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                HttpStatus.OK
         );
     }
 
@@ -50,6 +57,12 @@ public class PersonController {
 
     @PostMapping({"/", ""})
     public ResponseEntity<Person> createPerson(@RequestBody Person person) {
+        if (person.getNickname() == null
+                || person.getUsername() == null
+                || person.getPassword() == null) {
+            throw new NullPointerException("Ник, имя пользователя и пароль "
+                    + "не должны быть пустыми!!!");
+        }
         return new ResponseEntity<>(
                 personService.save(person),
                 HttpStatus.CREATED

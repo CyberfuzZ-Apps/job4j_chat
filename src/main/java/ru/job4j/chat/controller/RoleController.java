@@ -1,10 +1,17 @@
 package ru.job4j.chat.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.chat.exception.IllegalAuthorityException;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.service.RoleService;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Класс RoleController
@@ -17,9 +24,11 @@ import ru.job4j.chat.service.RoleService;
 public class RoleController {
 
     private final RoleService roleService;
+    private final ObjectMapper objectMapper;
 
-    public RoleController(RoleService roleService) {
+    public RoleController(RoleService roleService, ObjectMapper objectMapper) {
         this.roleService = roleService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping({"/", ""})
@@ -33,9 +42,15 @@ public class RoleController {
     @GetMapping("/{id}")
     public ResponseEntity<Role> findById(@PathVariable int id) {
         Role role = roleService.findById(id);
+        if (role == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Роль не найдена!!!"
+            );
+        }
         return new ResponseEntity<>(
                 role,
-                role != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                HttpStatus.OK
         );
     }
 
@@ -50,6 +65,13 @@ public class RoleController {
 
     @PostMapping({"/", ""})
     public ResponseEntity<Role> createRole(@RequestBody Role role) {
+        if (role.getAuthority() == null) {
+            throw new NullPointerException("Название роли не должно быть пустым!!!");
+        }
+        if (!role.getAuthority().startsWith("ROLE_")) {
+            throw new IllegalAuthorityException(
+                    "Название роли должно иметь префикс 'ROLE_'");
+        }
         return new ResponseEntity<>(
                 roleService.save(role),
                 HttpStatus.CREATED
@@ -77,5 +99,17 @@ public class RoleController {
     public ResponseEntity<Void> deleteByAuthority(@PathVariable String authority) {
         roleService.deleteByAuthority(authority);
         return ResponseEntity.ok().build();
+    }
+
+    @ExceptionHandler(value = {IllegalAuthorityException.class})
+    public void exceptionHandler(Exception e,
+                                 HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
+            put("message", e.getMessage());
+            put("type", e.getClass());
+        }}));
     }
 }

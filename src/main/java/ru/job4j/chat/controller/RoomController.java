@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.service.PersonService;
@@ -38,14 +39,23 @@ public class RoomController {
     @GetMapping("/{id}")
     public ResponseEntity<Room> findById(@PathVariable int id) {
         Room room = roomService.findById(id);
+        if (room == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Комната не найдена!!!"
+            );
+        }
         return new ResponseEntity<>(
                 room,
-                room != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                HttpStatus.OK
         );
     }
 
     @PostMapping({"/", ""})
     public ResponseEntity<Room> create(@RequestBody Room room) {
+        if (room.getName() == null) {
+            throw new NullPointerException("Название комнаты не должно быть пустым!!!");
+        }
         int personId = room.getPerson().getId();
         Person person = personService.findById(personId);
         room.setPerson(person);
