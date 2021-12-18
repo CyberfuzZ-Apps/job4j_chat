@@ -5,9 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.chat.dto.PersonDTO;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoleService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Класс PersonController
@@ -32,15 +36,18 @@ public class PersonController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<Iterable<Person>> findAll() {
+    public ResponseEntity<List<PersonDTO>> findAll() {
+        Iterable<Person> allPersons = personService.findAll();
+        List<PersonDTO> personsDTO = new ArrayList<>();
+        allPersons.forEach(person -> personsDTO.add(buildPersonDTO(person, person.getId())));
         return new ResponseEntity<>(
-                personService.findAll(),
+                personsDTO,
                 HttpStatus.OK
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Person> findById(@PathVariable int id) {
+    public ResponseEntity<PersonDTO> findById(@PathVariable int id) {
         Person person = personService.findById(id);
         if (person == null) {
             throw new ResponseStatusException(
@@ -48,23 +55,29 @@ public class PersonController {
                     "Пользователь не найден!!!"
             );
         }
+        PersonDTO personDTO = buildPersonDTO(person, id);
         return new ResponseEntity<>(
-                person,
+                personDTO,
                 HttpStatus.OK
         );
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<Person> findByUsername(@PathVariable String username) {
+    public ResponseEntity<PersonDTO> findByUsername(@PathVariable String username) {
         Person person = personService.findByUsername(username);
+        if (person == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден!!!");
+        }
+        PersonDTO personDTO = buildPersonDTO(person, person.getId());
         return new ResponseEntity<>(
-                person,
-                person != null ? HttpStatus.OK : HttpStatus.NOT_FOUND
+                personDTO,
+                HttpStatus.OK
         );
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<Person> signUp(@RequestBody Person person) {
+    public ResponseEntity<PersonDTO> signUp(@RequestBody Person person) {
         if (person.getNickname() == null
                 || person.getUsername() == null
                 || person.getPassword() == null) {
@@ -73,15 +86,16 @@ public class PersonController {
         }
         person.setPassword(encoder.encode(person.getPassword()));
         person.setAuthority(roleService.findByAuthority("ROLE_USER"));
+        Person savedPerson = personService.save(person);
         return new ResponseEntity<>(
-                personService.save(person),
+                buildPersonDTO(savedPerson, savedPerson.getId()),
                 HttpStatus.CREATED
         );
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Person> updatePerson(@PathVariable int id,
+    public ResponseEntity<PersonDTO> updatePerson(@PathVariable int id,
                                                @RequestBody Person person) {
         if (personService.findById(id) == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -90,8 +104,9 @@ public class PersonController {
         person.setId(id);
         person.setPassword(encoder.encode(person.getPassword()));
         person.setAuthority(roleService.findByAuthority("ROLE_USER"));
+        Person savedPerson = personService.save(person);
         return new ResponseEntity<>(
-                personService.save(person),
+                buildPersonDTO(savedPerson, id),
                 HttpStatus.OK
         );
     }
@@ -106,5 +121,15 @@ public class PersonController {
     public ResponseEntity<Void> deleteByUsername(@PathVariable String username) {
         personService.deleteByUsername(username);
         return ResponseEntity.ok().build();
+    }
+
+    private PersonDTO buildPersonDTO(Person person, int id) {
+        return PersonDTO.of(
+                id,
+                person.getNickname(),
+                person.getUsername(),
+                person.getPassword(),
+                person.getAuthority().getAuthority()
+        );
     }
 }
