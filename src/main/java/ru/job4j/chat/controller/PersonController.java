@@ -2,10 +2,12 @@ package ru.job4j.chat.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.service.PersonService;
+import ru.job4j.chat.service.RoleService;
 
 /**
  * Класс PersonController
@@ -18,9 +20,15 @@ import ru.job4j.chat.service.PersonService;
 public class PersonController {
 
     private final PersonService personService;
+    private final RoleService roleService;
+    private final BCryptPasswordEncoder encoder;
 
-    public PersonController(PersonService personService) {
+    public PersonController(PersonService personService,
+                            RoleService roleService,
+                            BCryptPasswordEncoder encoder) {
         this.personService = personService;
+        this.roleService = roleService;
+        this.encoder = encoder;
     }
 
     @GetMapping({"/", ""})
@@ -55,28 +63,36 @@ public class PersonController {
         );
     }
 
-    @PostMapping({"/", ""})
-    public ResponseEntity<Person> createPerson(@RequestBody Person person) {
+    @PostMapping("/sign-up")
+    public ResponseEntity<Person> signUp(@RequestBody Person person) {
         if (person.getNickname() == null
                 || person.getUsername() == null
                 || person.getPassword() == null) {
             throw new NullPointerException("Ник, имя пользователя и пароль "
                     + "не должны быть пустыми!!!");
         }
+        person.setPassword(encoder.encode(person.getPassword()));
+        person.setAuthority(roleService.findByAuthority("ROLE_USER"));
         return new ResponseEntity<>(
                 personService.save(person),
                 HttpStatus.CREATED
         );
+
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Person> updatePerson(@PathVariable int id,
                                                @RequestBody Person person) {
+        if (personService.findById(id) == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден!!!");
+        }
         person.setId(id);
-        Person person1 = personService.save(person);
+        person.setPassword(encoder.encode(person.getPassword()));
+        person.setAuthority(roleService.findByAuthority("ROLE_USER"));
         return new ResponseEntity<>(
-                person1,
-                person.getId() == person1.getId() ? HttpStatus.OK : HttpStatus.CREATED
+                personService.save(person),
+                HttpStatus.OK
         );
     }
 
