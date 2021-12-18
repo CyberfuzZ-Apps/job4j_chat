@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.chat.dto.RoomDTO;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.service.PersonService;
@@ -52,27 +53,43 @@ public class RoomController {
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<Room> create(@RequestBody Room room) {
-        if (room.getName() == null) {
-            throw new NullPointerException("Название комнаты не должно быть пустым!!!");
-        }
-        int personId = room.getPerson().getId();
-        Person person = personService.findById(personId);
-        room.setPerson(person);
+    public ResponseEntity<RoomDTO> create(@RequestBody RoomDTO roomDTO) {
+        RoomDTO responseRoom = getResponseRoomDTO(roomDTO, 0);
         return new ResponseEntity<>(
-                roomService.save(room),
+                responseRoom,
                 HttpStatus.CREATED
         );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Room> update(@PathVariable int id,
-            @RequestBody Room room) {
-        room.setId(id);
-        Room room1 = roomService.save(room);
+    public ResponseEntity<RoomDTO> update(@PathVariable int id,
+            @RequestBody RoomDTO roomDTO) {
+        RoomDTO responseRoom = getResponseRoomDTO(roomDTO, id);
         return new ResponseEntity<>(
-                room1,
-                room.getId() == room1.getId() ? HttpStatus.OK : HttpStatus.CREATED
+                responseRoom,
+                HttpStatus.OK
+        );
+    }
+
+    private RoomDTO getResponseRoomDTO(@RequestBody RoomDTO roomDTO, int id) {
+        if (roomDTO.getName() == null) {
+            throw new NullPointerException("Название комнаты не должно быть пустым!!!");
+        }
+        Person person = personService.findById(roomDTO.getPersonId());
+        if (person == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден!!!");
+        }
+        Room room = Room.of(
+                id,
+                roomDTO.getName(),
+                person
+        );
+        Room savedRoom = roomService.save(room);
+        return RoomDTO.of(
+                savedRoom.getId(),
+                savedRoom.getName(),
+                savedRoom.getPerson().getId()
         );
     }
 
