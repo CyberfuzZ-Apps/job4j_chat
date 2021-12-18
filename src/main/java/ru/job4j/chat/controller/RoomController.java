@@ -10,6 +10,9 @@ import ru.job4j.chat.model.Room;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoomService;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Класс RoomController
  *
@@ -29,16 +32,24 @@ public class RoomController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<Iterable<Room>> findAll() {
+    public ResponseEntity<List<RoomDTO>> findAll() {
         Iterable<Room> rooms = roomService.findAll();
+        List<RoomDTO> roomsDTO = new ArrayList<>();
+        rooms.forEach(room -> roomsDTO.add(
+                RoomDTO.of(
+                        room.getId(),
+                        room.getName(),
+                        room.getPerson().getId()
+                ))
+        );
         return new ResponseEntity<>(
-                rooms,
+                roomsDTO,
                 HttpStatus.OK
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Room> findById(@PathVariable int id) {
+    public ResponseEntity<RoomDTO> findById(@PathVariable int id) {
         Room room = roomService.findById(id);
         if (room == null) {
             throw new ResponseStatusException(
@@ -46,8 +57,13 @@ public class RoomController {
                     "Комната не найдена!!!"
             );
         }
+        RoomDTO roomDTO = RoomDTO.of(
+                room.getId(),
+                room.getName(),
+                room.getPerson().getId()
+        );
         return new ResponseEntity<>(
-                room,
+                roomDTO,
                 HttpStatus.OK
         );
     }
@@ -63,7 +79,7 @@ public class RoomController {
 
     @PutMapping("/{id}")
     public ResponseEntity<RoomDTO> update(@PathVariable int id,
-            @RequestBody RoomDTO roomDTO) {
+                                          @RequestBody RoomDTO roomDTO) {
         RoomDTO responseRoom = getResponseRoomDTO(roomDTO, id);
         return new ResponseEntity<>(
                 responseRoom,
