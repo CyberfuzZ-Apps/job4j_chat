@@ -4,12 +4,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.chat.PatchUtil;
 import ru.job4j.chat.dto.RoomDTO;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoomService;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class RoomController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<List<RoomDTO>> findAll() {
+    public ResponseEntity<List<RoomDTO>> findAllRooms() {
         Iterable<Room> rooms = roomService.findAll();
         List<RoomDTO> roomsDTO = new ArrayList<>();
         rooms.forEach(room -> roomsDTO.add(
@@ -49,7 +51,7 @@ public class RoomController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RoomDTO> findById(@PathVariable int id) {
+    public ResponseEntity<RoomDTO> findRoomById(@PathVariable int id) {
         Room room = roomService.findById(id);
         if (room == null) {
             throw new ResponseStatusException(
@@ -69,7 +71,7 @@ public class RoomController {
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<RoomDTO> create(@RequestBody RoomDTO roomDTO) {
+    public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) {
         RoomDTO responseRoom = getResponseRoomDTO(roomDTO, 0);
         return new ResponseEntity<>(
                 responseRoom,
@@ -78,7 +80,7 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RoomDTO> update(@PathVariable int id,
+    public ResponseEntity<RoomDTO> updateRoom(@PathVariable int id,
                                           @RequestBody RoomDTO roomDTO) {
         RoomDTO responseRoom = getResponseRoomDTO(roomDTO, id);
         return new ResponseEntity<>(
@@ -86,6 +88,31 @@ public class RoomController {
                 HttpStatus.OK
         );
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<RoomDTO> patchRoom(@PathVariable int id,
+                                          @RequestBody RoomDTO roomDTO)
+            throws InvocationTargetException, IllegalAccessException {
+        Room foundedRoom = roomService.findById(id);
+        if (foundedRoom == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Комната не найдена!!!");
+        }
+        RoomDTO foundedRoomDTO = RoomDTO.of(
+                id,
+                foundedRoom.getName(),
+                foundedRoom.getPerson().getId()
+        );
+        RoomDTO patchedRoomDTO = PatchUtil.patch(roomDTO, foundedRoomDTO);
+        patchedRoomDTO.setId(id);
+        patchedRoomDTO.setPersonId(foundedRoom.getPerson().getId());
+        RoomDTO responseRoomDTO = getResponseRoomDTO(patchedRoomDTO, id);
+        return new ResponseEntity<>(
+                responseRoomDTO,
+                HttpStatus.OK
+        );
+    }
+
 
     private RoomDTO getResponseRoomDTO(@RequestBody RoomDTO roomDTO, int id) {
         if (roomDTO.getName() == null) {
@@ -110,7 +137,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
+    public ResponseEntity<Void> deleteRoom(@PathVariable int id) {
         roomService.deleteById(id);
         return ResponseEntity.ok().build();
     }

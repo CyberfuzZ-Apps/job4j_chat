@@ -1,11 +1,5 @@
 package ru.job4j.chat.dto;
 
-import ru.job4j.chat.model.Person;
-import ru.job4j.chat.model.Room;
-
-import javax.persistence.CascadeType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import java.sql.Timestamp;
 import java.util.Objects;
 
@@ -22,6 +16,17 @@ public class MessageDTO {
     private Timestamp created;
     private int personId;
     private int roomId;
+
+    public static MessageDTO of(int id, String message, Timestamp created,
+                                int personId, int roomId) {
+        MessageDTO messageDTO = new MessageDTO();
+        messageDTO.id = id;
+        messageDTO.message = message;
+        messageDTO.created = created;
+        messageDTO.personId = personId;
+        messageDTO.roomId = roomId;
+        return messageDTO;
+    }
 
     public int getId() {
         return id;

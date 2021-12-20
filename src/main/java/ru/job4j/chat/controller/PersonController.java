@@ -5,13 +5,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.chat.PatchUtil;
 import ru.job4j.chat.dto.PersonDTO;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoleService;
 
+import javax.transaction.Transactional;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Класс PersonController
@@ -107,6 +113,24 @@ public class PersonController {
         Person savedPerson = personService.save(person);
         return new ResponseEntity<>(
                 buildPersonDTO(savedPerson, id),
+                HttpStatus.OK
+        );
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<PersonDTO> patchPerson(@PathVariable int id,
+                                                 @RequestBody Person person)
+            throws InvocationTargetException, IllegalAccessException {
+        Person foundedPerson = personService.findById(id);
+        if (foundedPerson == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден!!!");
+        }
+        Person patchedPerson = PatchUtil.patch(person, foundedPerson);
+        patchedPerson.setId(id);
+        Person responsePerson = personService.save(patchedPerson);
+        return new ResponseEntity<>(
+                buildPersonDTO(responsePerson, id),
                 HttpStatus.OK
         );
     }
