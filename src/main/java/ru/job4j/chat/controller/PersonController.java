@@ -11,13 +11,10 @@ import ru.job4j.chat.model.Person;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoleService;
 
-import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Класс PersonController
@@ -83,13 +80,7 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<PersonDTO> signUp(@RequestBody Person person) {
-        if (person.getNickname() == null
-                || person.getUsername() == null
-                || person.getPassword() == null) {
-            throw new NullPointerException("Ник, имя пользователя и пароль "
-                    + "не должны быть пустыми!!!");
-        }
+    public ResponseEntity<PersonDTO> signUp(@Valid @RequestBody Person person) {
         person.setPassword(encoder.encode(person.getPassword()));
         person.setAuthority(roleService.findByAuthority("ROLE_USER"));
         Person savedPerson = personService.save(person);
@@ -102,7 +93,7 @@ public class PersonController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PersonDTO> updatePerson(@PathVariable int id,
-                                               @RequestBody Person person) {
+                                                  @Valid @RequestBody Person person) {
         if (personService.findById(id) == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Пользователь не найден!!!");

@@ -13,6 +13,7 @@ import ru.job4j.chat.service.MessageService;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoomService;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -76,11 +77,8 @@ public class MessageController {
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<MessageDTO> createMessage(@RequestBody MessageDTO messageDTO,
+    public ResponseEntity<MessageDTO> createMessage(@Valid @RequestBody MessageDTO messageDTO,
                                           @PathVariable int roomId) {
-        if (messageDTO.getMessage() == null) {
-            throw new NullPointerException("Сообщение не должно быть пустым!!!");
-        }
         messageDTO.setCreated(Timestamp.valueOf(LocalDateTime.now()));
         Message message = buildMessage(messageDTO, 0);
         Message savedMessage = messageService.save(message);
@@ -95,7 +93,7 @@ public class MessageController {
     }
 
     @PutMapping("/{messageId}")
-    public ResponseEntity<MessageDTO> updateMessage(@RequestBody MessageDTO messageDTO,
+    public ResponseEntity<MessageDTO> updateMessage(@Valid @RequestBody MessageDTO messageDTO,
                                        @PathVariable int messageId,
                                           @PathVariable int roomId) {
         Message foundedMessage = getMessageToUpdate(messageDTO, messageId);

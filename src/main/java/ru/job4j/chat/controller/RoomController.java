@@ -11,6 +11,7 @@ import ru.job4j.chat.model.Room;
 import ru.job4j.chat.service.PersonService;
 import ru.job4j.chat.service.RoomService;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +72,7 @@ public class RoomController {
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) {
+    public ResponseEntity<RoomDTO> createRoom(@Valid @RequestBody RoomDTO roomDTO) {
         RoomDTO responseRoom = getResponseRoomDTO(roomDTO, 0);
         return new ResponseEntity<>(
                 responseRoom,
@@ -81,7 +82,7 @@ public class RoomController {
 
     @PutMapping("/{id}")
     public ResponseEntity<RoomDTO> updateRoom(@PathVariable int id,
-                                          @RequestBody RoomDTO roomDTO) {
+                                              @Valid @RequestBody RoomDTO roomDTO) {
         RoomDTO responseRoom = getResponseRoomDTO(roomDTO, id);
         return new ResponseEntity<>(
                 responseRoom,
@@ -91,7 +92,7 @@ public class RoomController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<RoomDTO> patchRoom(@PathVariable int id,
-                                          @RequestBody RoomDTO roomDTO)
+                                             @RequestBody RoomDTO roomDTO)
             throws InvocationTargetException, IllegalAccessException {
         Room foundedRoom = roomService.findById(id);
         if (foundedRoom == null) {

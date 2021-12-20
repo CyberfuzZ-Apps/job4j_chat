@@ -11,6 +11,7 @@ import ru.job4j.chat.model.Role;
 import ru.job4j.chat.service.RoleService;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -68,7 +69,7 @@ public class RoleController {
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<Role> createRole(@RequestBody Role role) {
+    public ResponseEntity<Role> createRole(@Valid @RequestBody Role role) {
         if (role.getAuthority() == null) {
             throw new NullPointerException("Название роли не должно быть пустым!!!");
         }
@@ -84,7 +85,7 @@ public class RoleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Role> updateRole(@PathVariable int id,
-                                               @RequestBody Role role) {
+                                           @Valid @RequestBody Role role) {
         role.setId(id);
         Role role1 = roleService.save(role);
         return new ResponseEntity<>(
@@ -130,9 +131,11 @@ public class RoleController {
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
-            put("message", e.getMessage());
-            put("type", e.getClass());
-        }}));
+        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {
+            {
+                put("message", e.getMessage());
+                put("type", e.getClass());
+            }
+        }));
     }
 }

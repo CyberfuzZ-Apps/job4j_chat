@@ -1,5 +1,8 @@
 package ru.job4j.chat.dto;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.sql.Timestamp;
 import java.util.Objects;
 
@@ -11,10 +14,18 @@ import java.util.Objects;
  */
 public class MessageDTO {
 
+    @PositiveOrZero(message = "id должен быть положительным числом или 0!")
     private int id;
+
+    @NotBlank(message = "message не может быть пустым!")
     private String message;
+
     private Timestamp created;
+
+    @Positive(message = "personId должен быть положительным числом и не 0!")
     private int personId;
+
+    @Positive(message = "roomId должен быть положительным числом и не 0!")
     private int roomId;
 
     public static MessageDTO of(int id, String message, Timestamp created,

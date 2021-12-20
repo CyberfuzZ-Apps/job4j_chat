@@ -1,7 +1,6 @@
 package ru.job4j.chat.dto;
 
-import ru.job4j.chat.model.Person;
-
+import javax.validation.constraints.*;
 import java.util.Objects;
 
 /**
@@ -12,8 +11,13 @@ import java.util.Objects;
  */
 public class RoomDTO {
 
+    @PositiveOrZero(message = "id должен быть положительным числом или 0!")
     private int id;
+
+    @NotBlank(message = "Название комнаты не должно быть пустым!")
     private String name;
+
+    @Positive(message = "personId должен быть положительным числом и не 0!")
     private int personId;
 
     public static RoomDTO of(int id, String name, int personId) {

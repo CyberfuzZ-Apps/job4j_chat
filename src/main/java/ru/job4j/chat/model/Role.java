@@ -1,6 +1,7 @@
 package ru.job4j.chat.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.util.Objects;
 
 /**
@@ -16,6 +17,8 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @NotBlank(message = "authority не должна быть пустой!")
     private String authority;
 
     public int getId() {

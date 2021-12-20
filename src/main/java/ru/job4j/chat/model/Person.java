@@ -1,6 +1,9 @@
 package ru.job4j.chat.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Objects;
 
 /**
@@ -15,9 +18,17 @@ public class Person {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @PositiveOrZero(message = "id должен быть положительным числом или 0!")
     private int id;
+
+    @NotBlank(message = "username не должен быть пустым!")
     private String nickname;
+
+    @NotBlank(message = "username не должен быть пустым")
+    @Email(message = "username должен содержать адрес электронной почты с символом '@'")
     private String username;
+
+    @NotBlank(message = "password не должен быть пустым!")
     private String password;
 
     @ManyToOne
