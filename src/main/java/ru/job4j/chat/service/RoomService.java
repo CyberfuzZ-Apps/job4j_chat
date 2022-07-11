@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.repository.RoomRepository;
 
+import java.util.List;
+
 /**
  * Класс RoomService
  *
@@ -37,5 +39,9 @@ public class RoomService implements GlobalService<Room> {
     @Override
     public void deleteById(int id) {
         roomRepository.deleteById(id);
+    }
+
+    public List<Room> findByName(String name) {
+        return roomRepository.findByName(name);
     }
 }

@@ -142,4 +142,9 @@ public class RoomController {
         roomService.deleteById(id);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/name")
+    public void findByName(@PathVariable String name) {
+        System.out.println(roomService.findByName(name));
+    }
 }
